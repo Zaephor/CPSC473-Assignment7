@@ -128,7 +128,7 @@ router.all("/:hash", function (req, res, next) {
         if (err === null && result !== null) {
 //            console.log({func:'url-hash',err:err,result:result});
             // Increment hit counter because result was found
-            db.zincrby(["count", 1, hash]);
+            db.zincrby(["count", 1, hash],function(){console.log("Hit! - "+hash)});
             // Forward user to URL
             res.redirect(result);
         } else {
