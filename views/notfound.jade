@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  .jumbotron
+    form
+      label(for="shortenURL") Enter a URL for shortening
+      .input-group
+        input.form-control(type="text",id="shortenURL",placeholder="http://example.com")
+        span.input-group-btn
+          button.btn.btn-default(type="button",id="submit") Submit
+    .result
+  .row
+    .col-md-4
+      h2 Top visited
+      table.table.table-condensed.table-striped.mostused
+    .col-md-offset-4.col-md-4
+      h2 Newest
+      table.table.table-condensed.table-striped.newest
+block foot
+  script(src='/js/validator.min.js')
+  script(src='/js/shortner.js')
