@@ -130,10 +130,10 @@ router.all("/:hash", function (req, res, next) {
             // Increment hit counter because result was found
             db.zincrby(["count", 1, hash],function(){console.log("Hit! - "+hash)});
             // Forward user to URL
-            res.redirect(result);
+            res.redirect(302,result);
         } else {
             // If not found, redirect to notfound
-            res.redirect("/notfound");
+            res.redirect(404,"/notfound");
         }
     });
 });
