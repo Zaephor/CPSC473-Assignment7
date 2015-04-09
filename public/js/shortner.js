@@ -47,11 +47,11 @@ var shortner = function() {
     var submit = function(){
         var url = $("#shortenURL").val(); // Grab contents of text block
         // Check if URL is valid -- Confirmed on serverside too
-        if(!validator.isURL(url,{require_protocol:true,host_blacklist:["localhost","127.0.0.1"]}) && validator.isURL("http://"+url,{require_protocol:true,host_blacklist:["localhost","127.0.0.1"]})){
+        if(!validator.isURL(url,{require_protocol:true,host_blacklist:["127.0.0.1"]}) && validator.isURL("http://"+url,{require_protocol:true,host_blacklist:["localhost","127.0.0.1"]})){
             url = "http://"+url;
         }
         // Last check if URL is valid, the above appends http:// to the beginning incase that's the problem. Serverside performs same steps to be thorough
-        if(validator.isURL(url,{require_protocol:true,host_blacklist:["localhost","127.0.0.1"]})) {
+        if(validator.isURL(url,{require_protocol:true,host_blacklist:["127.0.0.1"]})) {
             // POST to server
             $.post("/submit", {path: url}, function (response) {
 //            console.log(response);

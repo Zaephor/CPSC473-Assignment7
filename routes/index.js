@@ -48,32 +48,41 @@ router.post("/submit", function (req, res, next) {
     // Validate URL, found validator module in NPM
     if (!validator.isURL(path, {
             require_protocol: true,
-            host_blacklist: [req.headers.host, "localhost", "127.0.0.1"]
+            host_blacklist: ["127.0.0.1"]
         }) && validator.isURL("http://" + path, {
             require_protocol: true,
-            host_blacklist: [req.headers.host, "localhost", "127.0.0.1"]
+            host_blacklist: ["127.0.0.1"]
         })) {
         path = "http://" + path;
     }
     // Alternate validation could be to perform header check against the URL to confirm the host is real.
-    if (validator.isURL(path, {require_protocol: true, host_blacklist: [req.headers.host, "localhost", "127.0.0.1"]})) {
+    if (validator.isURL(path, {require_protocol: true, host_blacklist: ["127.0.0.1"]})) {
         // Hash the url string
         var hash = utility.stringHash(path);
-        var multi = db.multi();
-        // We decided that it is ok to give the same code to different end users, since we intend to display a top-10 list,
-        // figured it made sense to allow URIs to be reused.
-        // submit posted data to redis(setnx, set if Not eXist)
-        multi.setnx("url:" + hash, path);
-        // Add entry to newest list
-        // (0 - current unixtime) results in a negative unixtime.
-        // Using a sorted set, this allows us to ignore duplicate new entries(within 10 submissions) and keep entries sorted easily
-        multi.zadd(["newest", (0 - _.now()), hash]);
-        // Trim to 10 items
-        multi.zremrangebyrank("newest", 10, -1);
-        // actually execute above actions together/atomically
-        multi.exec();
-        // return shortened URL
-        res.json({shortURL: "http://" + req.headers.host + "/" + hash});
+        var fullHost = "http://" + req.headers.host + "/";
+        if(path.substring(0,(fullHost.length)) !== fullHost) { // Check if begins with hostname
+            var multi = db.multi();
+            // We decided that it is ok to give the same code to different end users, since we intend to display a top-10 list,
+            // figured it made sense to allow URIs to be reused.
+            // submit posted data to redis(setnx, set if Not eXist)
+            multi.setnx("url:" + hash, path);
+            // Add entry to newest list
+            // (0 - current unixtime) results in a negative unixtime.
+            // Using a sorted set, this allows us to ignore duplicate new entries(within 10 submissions) and keep entries sorted easily
+            multi.zadd(["newest", (0 - _.now()), hash]);
+            // Trim to 10 items
+            multi.zremrangebyrank("newest", 10, -1);
+            // actually execute above actions together/atomically
+            multi.exec();
+            // return shortened URL
+            res.json({shortURL: "http://" + req.headers.host + "/" + hash});
+        } else { // Begins with hostname, return the long URL
+            var hashBreak = path.substring((fullHost.length),path.length);
+            db.get("url:" + hashBreak, function (err, result) {
+                // Not really returning a short URL, but the tag is already used.
+                res.json({shortURL: result});
+            });
+        }
     } else { // Return that URL was bad
         res.json({"error": "URL is considered invalid"});
     }
